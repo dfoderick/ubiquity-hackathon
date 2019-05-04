@@ -9,9 +9,13 @@ const vorpal = require('vorpal')()
 const { Wallet } = require('../importedcode/wallet')
 
 const swarm_topic = 'metanet'
+//list of all peers
 const peers = {}
+//the peer we are connected to
+let peer = null
+//connection sequence number
 let connSeq = 0
-let myhost = os.hostname()
+//our alias name on the p2p network
 let myhandle = os.userInfo().username
 const wallet = new Wallet()
 
@@ -68,9 +72,29 @@ async function startSwarm () {
         log(`Received message from peer ${peer.handle || peer.id } ---> ${showObject(data)}`)
         //commands received from peer will go here
         let msg = data.toString()
+        //peer has changed their handle
         if (msg.startsWith('#iam ')) {
             peer.handle = msg.replace('#iam ','')
             log(`Peer handle updated to ${peer.handle}`)
+        }
+        //peer has broadcasted public key and address
+        if (msg.startsWith('#xpub ')) {
+          const payload = msg.replace('#xpub ','').split(' ')
+          peer.xpub = payload[0]
+          if (payload.length > 0) {
+            peer.address = payload[1]
+          }
+          log(`Peer xpub is now ${peer.xpub} @ address ${peer.address}`)
+        }
+        if (msg.startsWith('#@ ')) {
+          const requestedPeer = msg.replace('#@ ','')
+          peer = this.findPeerByHandle(requestedPeer)
+          if (peer) {
+            log(`Connected to peer ${peer.handle || peer.id}`)
+            sendpeer(peer, `#xpub ${wallet.walletContents.xpub} ${wallet.walletContents.address}`)
+          } else {
+            this.log(`Unknown peer handle ${requestedPeer}`)
+          }
         }
     })
 
@@ -98,8 +122,6 @@ async function startSwarm () {
 
 startSwarm()
 
-p2pPeer = null
-
 //---------------------- Commands -----------------------
 
 vorpal
@@ -123,6 +145,31 @@ vorpal
     callback()
   })
 
+vorpal
+  .command('@ <peer>', 'connect direct p2p exchange with peer seq')
+  .action(function(args, callback) {
+    const handle = args.peer
+    peer = Object.values(peers).find(p => p.handle && p.handle === handle)
+    if (peer) {
+        let peerPrompt = peer.handle || peer.id
+        const newPrompt = `${myhandle}<->${peerPrompt}$` 
+        vorpal.delimiter(newPrompt)
+        vorpal.ui.refresh()
+        vorpal.ui.redraw.done()
+    } else {
+      vorpal.log(`Could not connect to peer ${args.peer}`)
+    }
+    callback()
+  })
+
+
+vorpal
+  .command('send xpub', 'send your wallet xpub')
+  .action(function(args, callback) {
+    sendpeer(peer, `#xpub ${wallet.walletContents.xpub} ${wallet.walletContents.address}`)
+    this.log(`sent xpub to ${peer.handle || peer.id}`)
+    callback()
+  })
 
 let commandPrompt = 'ubiquity$'
 vorpal
@@ -132,7 +179,7 @@ vorpal
 //---------------------- Functions -----------------------
 
 function whoami() {
-  log(`You are ${myhandle} on ${myhost} (${myId.toString('hex')})`)
+  log(`You are ${myhandle} (${myId.toString('hex')})`)
 }
 
 function log () {
@@ -154,15 +201,19 @@ function showObject(data) {
 function listPeers() {
     for (let id in peers) {
         const listpeer = peers[id]
-        const connected = p2pPeer && p2pPeer.id === id ? "@" : " "
-        log(`${connected}Peer #${listpeer.seq} ${listpeer.host}:${listpeer.port} (${id})`)
+        const connected = peer && peer.id === id ? "@" : " "
+        log(`${connected}Peer #${listpeer.seq} ${listpeer.handle} ${listpeer.host}:${listpeer.port} (${id}) ${listpeer.xpub}`)
     }
+}
+
+function sendpeer(peer, message) {
+    peer.conn.write(message)
 }
 
 function broadcast(message) {
     let sentCount = 0
     for (let id in peers) {
-        peers[id].conn.write(message)
+        sendpeer(peers[id], message)
         sentCount++
     }
     return sentCount

@@ -6,7 +6,9 @@ const SwarmDiscovery = require('discovery-swarm')
 const defaults = require('dat-swarm-defaults')
 const getPort = require('get-port')
 const vorpal = require('vorpal')()
+const bsv = require('bsv')
 const { Wallet } = require('../importedcode/wallet')
+const { ExchangeTransaction } = require('../importedcode/exchangeTransaction')
 
 const swarm_topic = 'metanet'
 //list of all peers
@@ -18,6 +20,8 @@ let connSeq = 0
 //our alias name on the p2p network
 let myhandle = os.userInfo().username
 const wallet = new Wallet()
+// the payment tx exchanged between peers
+let payment = null
 
 // Peer Identity, a random hash to identify your peer
 const myId = crypto.randomBytes(32)
@@ -72,6 +76,11 @@ async function startSwarm () {
         log(`Received message from peer ${peer.handle || peer.id } ---> ${showObject(data)}`)
         //commands received from peer will go here
         let msg = data.toString()
+        const extx = getTransactionFromData(data.toString())
+        if (extx) {
+            payment = extx
+        }
+        //todo: see if it is a tx
         //peer has changed their handle
         if (msg.startsWith('#iam ')) {
             peer.handle = msg.replace('#iam ','')
@@ -86,16 +95,19 @@ async function startSwarm () {
           }
           log(`Peer xpub is now ${peer.xpub} @ address ${peer.address}`)
         }
+        //peer is hailing us
         if (msg.startsWith('#@ ')) {
           const requestedPeer = msg.replace('#@ ','')
-          peer = this.findPeerByHandle(requestedPeer)
+          peer = Object.values(peers).find(p => p.handle && p.handle === requestedPeer)
           if (peer) {
             log(`Connected to peer ${peer.handle || peer.id}`)
             sendpeer(peer, `#xpub ${wallet.walletContents.xpub} ${wallet.walletContents.address}`)
           } else {
-            this.log(`Unknown peer handle ${requestedPeer}`)
+            log(`Unknown peer handle ${requestedPeer}`)
           }
         }
+        // if (msg.startsWith('#payment')) {
+        // }
     })
 
     conn.on('close', () => {
@@ -171,6 +183,51 @@ vorpal
     callback()
   })
 
+vorpal
+  .command('pay <amount> <fee>', 'sends payment tx to peer. peer will broadcast')
+  .action(function(args, callback) {
+    if (!peer) {
+      console.error(`You have no peer`)
+    } else {
+      if (!peer.xpub) {
+        console.error(`Your peer has not sent public Key`)
+      } else {
+        ; (async () => {
+          const bal = await wallet.getBalance()
+          if (bal < args.amount) {
+            console.error(`Your wallet balance is too low to send that amount`)
+          } else {
+            ; (async () => {
+                const paymenttx = await wallet.makeTransactionTo(peer.address, args.amount, args.fee )
+                payment = new ExchangeTransaction(wallet, paymenttx)
+                //TODO add custom message instead
+                payment.addCommand('#payment')
+                sendExchangeTransaction(payment)
+            })()
+          }
+        })()
+      }
+    }
+    callback()
+  })
+
+vorpal
+  .command('w', 'show wallet utxos')
+  .action(function(args, callback) {
+      vorpal.log(`handle ${myhandle}`)
+      wallet.show()
+    callback()
+  })
+
+vorpal
+  .command('d', 'debug. show payment transaction')
+  .action(function(args, callback) {
+    if (payment) {
+        showTransaction(payment.getTransaction())
+    }
+    callback()
+  })
+
 let commandPrompt = 'ubiquity$'
 vorpal
   .delimiter(`${commandPrompt}`)
@@ -217,4 +274,74 @@ function broadcast(message) {
         sentCount++
     }
     return sentCount
+}
+
+function sendExchangeTransaction(extx) {
+    if (peer) {
+        const tx = extx.getTransaction()
+        try {
+            const sent = JSON.stringify(tx.toJSON())
+            peer.conn.write(sent)
+            return sent
+        }
+        catch (ex) {
+            log(tx)
+            log(ex)
+        }
+    }
+    return null
+}
+
+function getTransactionFromData(data) {
+    //if message begins with '#' then we know it is not a transaction
+    if ((typeof data == 'string' || data instanceof String) && !data.startsWith('#')) {
+        try {
+            let dat = data
+            if (data.startsWith('{"')) {
+                dat = JSON.parse(data)
+            }
+            return new ExchangeTransaction(wallet, new bsv.Transaction(dat))
+        }
+        catch (ex) {
+            console.error(`Error exchange: ${data}`)
+            console.error(`${ex}`)
+        }
+    }
+    return null
+}
+
+function showTransaction(tx) {
+    try {
+        if (tx) {
+            const bytes = tx.toString().length
+            log(`----------`)
+            log(`Id:${tx.id} Len:${bytes} Signed?:${tx.isFullySigned()}`)
+            let amountIn = 0
+            for(let x = 0; x < tx.inputs.length; x++) {
+                const txin = tx.inputs[x] 
+                amountIn += txin.output.satoshis
+                log(`IN[${x}]: [${txin.isFullySigned() ? 'signed' : 'unsigned'}/${txin.isFinal()? 'final' : 'inprogress'}] ${txin.output.satoshis} Data=[${txin.getDataScript()}] Script=[${txin.script}] `)
+            }
+            let amountOut = 0
+            let amountChange = 0
+            for(let x = 0; x < tx.outputs.length; x++) {
+                const o = tx.outputs[x]
+                if (o.script == wallet.scriptPubKey.toString()) {
+                    amountChange += o.satoshis
+                    log(`CHG[${x}]: ${o.satoshis} pay to ${myhandle}`)
+                } else {
+                    amountOut += o.satoshis
+                    log(`OUT[${x}]: ${o.satoshis} ${o.script.isDataOut() ? o.script.getData() : o.script.inspect() }`)
+                }
+            }
+            const fee = amountIn - (amountOut + amountChange)
+            log(`Summary: Len:${bytes} In[${tx.inputs.length}]=${amountIn} Out[${tx.outputs.length}] ${amountOut} Chg:${amountChange} Fee: ${fee} (${(fee/bytes).toFixed(2)} sat/bytes)`)
+        } else {
+            log(`No tx ${name}`)
+        }
+    }
+    catch (ex) {
+        log(tx)
+        log(ex)
+    }
 }

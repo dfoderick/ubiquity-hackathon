@@ -8,6 +8,7 @@
 //const utils = require('./utils')
 const bsv = require('bsv')
 const fs = require('fs')
+const vorpal = require('vorpal')()
 const bitcoinsource = require('bitcoinsource')
 const Insight = require('bitcoin-source-api')
 
@@ -119,7 +120,6 @@ class Wallet {
         const result = []
         let sum = 0
         for (var u of utxos) {
-            //console.log(`${sum} ${amount}`)
             if (sum < amount) {
                 result.push(u)
                 sum += u.satoshis
@@ -138,9 +138,6 @@ class Wallet {
 
     // make a tx from us
     async makeTransactionTo(toAddress, amount, fee) {
-        console.log(`fee ${fee}`)
-        // console.log(this.walletContents.address)
-        // console.log(bsv.Script.fromAddress(this.walletContents.address))
         //don't add all the utoxs, just add enough to cover the amount
         const utxos = await this.getUtxos(this.walletContents.address)
         let tx = new bsv.Transaction()
@@ -149,7 +146,6 @@ class Wallet {
             .change(this.walletContents.address)
         if (fee && fee > 0) {
             tx = tx.fee(fee)
-            //.feePerKb(800)
         }
         tx.sign(this.privateKey)
         return tx
@@ -164,6 +160,27 @@ class Wallet {
     sign(tx) {
         tx.sign(this.privateKey)
         return tx
+    }
+
+    show() {
+      vorpal.log(`address ${this.walletContents.address}`)
+      vorpal.log(`xpub ${this.walletContents.xpub}`)
+      vorpal.log(`scriptPubKey ${this.scriptPubKey.toString()}`)
+      vorpal.log(`scriptPubKey ${this.scriptPubKey.toHex()}`)
+      //get balance
+      const api = this.getApi()
+      const addrObj = new bitcoinsource.Address(this.walletContents.address)
+      ; (async () => {
+        const bal = await api.getBalance(addrObj)
+        vorpal.log(`Balance ${bal}`)
+      })()
+      ; (async () => {
+        const utxos = await api.getUtxos(addrObj)
+        for (let x = 0; x < utxos.length; x++) {
+          vorpal.log(`Utxo${x} ${JSON.stringify(utxos[x])}`)
+      }
+      })()
+
     }
 
 }

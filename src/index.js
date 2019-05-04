@@ -1,24 +1,27 @@
 const os = require('os')
+const fs = require('fs')
 const EventEmitter = require('events')
 const crypto = require('crypto')
 const SwarmDiscovery = require('discovery-swarm')
 const defaults = require('dat-swarm-defaults')
 const getPort = require('get-port')
 const vorpal = require('vorpal')()
+const { Wallet } = require('../importedcode/wallet')
 
-swarm_topic = 'metanet'
-peers = {}
-connSeq = 0
-myhost = os.hostname()
-myhandle = os.userInfo().username
+const swarm_topic = 'metanet'
+const peers = {}
+let connSeq = 0
+let myhost = os.hostname()
+let myhandle = os.userInfo().username
+const wallet = new Wallet()
 
 // Peer Identity, a random hash to identify your peer
-myId = crypto.randomBytes(32)
+const myId = crypto.randomBytes(32)
 /** 
 * Default DNS and DHT servers
 * These servers are used for peer discovery and establishing connection
 */
-config = defaults({
+const config = defaults({
     id: myId,
     handle: `${myhandle}`
 })
@@ -61,8 +64,14 @@ async function startSwarm () {
     }
 
     conn.on('data', data => {
-      const peer = peers[peerId]
-      log(`Received message from peer ${peer.handle || peer.id } ---> ${showObject(data)}`)
+        const peer = peers[peerId]
+        log(`Received message from peer ${peer.handle || peer.id } ---> ${showObject(data)}`)
+        //commands received from peer will go here
+        let msg = data.toString()
+        if (msg.startsWith('#iam ')) {
+            peer.handle = msg.replace('#iam ','')
+            log(`Peer handle updated to ${peer.handle}`)
+        }
     })
 
     conn.on('close', () => {
@@ -87,6 +96,41 @@ async function startSwarm () {
 
 }
 
+startSwarm()
+
+p2pPeer = null
+
+//---------------------- Commands -----------------------
+
+vorpal
+  .command('peers', 'show peers')
+  .action(function(args, callback) {
+    listPeers()
+    callback()
+  })
+
+vorpal
+  .command('iam <handle>', 'changes your handle and wallet')
+  .action(function(args, callback) {
+    myhandle = args.handle
+    broadcast(`#iam ${myhandle}`)
+    vorpal.delimiter(`${args.handle}$`)
+    //switch wallet
+    const walletName = `wallet_${args.handle}.json`
+    wallet.initialize(walletName)
+    wallet.fileName = walletName
+    vorpal.log(`using wallet ${walletName}`)
+    callback()
+  })
+
+
+let commandPrompt = 'ubiquity$'
+vorpal
+  .delimiter(`${commandPrompt}`)
+  .show()
+
+//---------------------- Functions -----------------------
+
 function whoami() {
   log(`You are ${myhandle} on ${myhost} (${myId.toString('hex')})`)
 }
@@ -107,11 +151,19 @@ function showObject(data) {
   }
 }
 
+function listPeers() {
+    for (let id in peers) {
+        const listpeer = peers[id]
+        const connected = p2pPeer && p2pPeer.id === id ? "@" : " "
+        log(`${connected}Peer #${listpeer.seq} ${listpeer.host}:${listpeer.port} (${id})`)
+    }
+}
 
-startSwarm()
-
-let commandPrompt = 'ubiquity$'
-
-vorpal
-  .delimiter(`${commandPrompt}`)
-  .show()
+function broadcast(message) {
+    let sentCount = 0
+    for (let id in peers) {
+        peers[id].conn.write(message)
+        sentCount++
+    }
+    return sentCount
+}

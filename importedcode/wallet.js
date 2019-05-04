@@ -184,11 +184,11 @@ class Wallet {
 
     async broadcast(tx) {
         if (!tx) {
-            this.log(`No transaction to broacast!`)
+            vorpal.log(`No transaction to broacast!`)
             return null
         }
         if (tx.getFee() > 1200) {
-            this.log(`Fee ${tx.getFee()} is too much!`)
+            vorpal.log(`Fee ${tx.getFee()} is too much!`)
             return null
         }
         try {
@@ -198,11 +198,10 @@ class Wallet {
             const result = await api.sendTransaction(txsend)
             return result
         } catch (ex) {
-            this.log(ex)
+            vorpal.log(ex)
         }
         return null
     }
-
 
 }
 

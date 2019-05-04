@@ -74,13 +74,13 @@ async function startSwarm () {
     conn.on('data', data => {
         const peer = peers[peerId]
         log(`Received message from peer ${peer.handle || peer.id } ---> ${showObject(data)}`)
-        //commands received from peer will go here
+        //commands received from peer will go here. data can be string object or tx json
         let msg = data.toString()
         const extx = getTransactionFromData(data.toString())
         if (extx) {
             payment = extx
+            msg = payment.getCommand()
         }
-        //todo: see if it is a tx
         //peer has changed their handle
         if (msg.startsWith('#iam ')) {
             peer.handle = msg.replace('#iam ','')
@@ -106,8 +106,32 @@ async function startSwarm () {
             log(`Unknown peer handle ${requestedPeer}`)
           }
         }
-        // if (msg.startsWith('#payment')) {
-        // }
+        //peer has requested that we calculate factorial
+        if (msg.startsWith('#factorial ')) {
+            extx.fromAddress = peer.address
+            extx.toAddress = wallet.walletContents.address
+            //get n, compute factorial, send back result
+            const num = parseInt(msg.replace('#factorial ',''), 10)
+            //to execute on our end, then we charge peer iteration
+            let result = 1
+            if (num === 0) return 1
+            for (cnt = 1; cnt <= num; cnt++) {
+                result *= cnt
+                const loopDescription = `factorial of ${cnt} is ${result}`
+                vorpal.log(loopDescription)
+                //add op_return to transaction
+                extx.addData(loopDescription)
+                extx.pay(10)
+            }
+            extx.addData(`result:${result}`)
+            //extx.addRefundOutput()
+            log(`result ${result}`)
+            //send result back to caller
+            //extx.trimReturns()
+            //execute the script so that command is removed. avoids infinite loop
+            extx.execute()
+            sendExchangeTransaction(extx)
+        }
     })
 
     conn.on('close', () => {
@@ -179,7 +203,7 @@ vorpal
   .command('send xpub', 'send your wallet xpub')
   .action(function(args, callback) {
     sendpeer(peer, `#xpub ${wallet.walletContents.xpub} ${wallet.walletContents.address}`)
-    this.log(`sent xpub to ${peer.handle || peer.id}`)
+    log(`sent xpub to ${peer.handle || peer.id}`)
     callback()
   })
 
@@ -226,7 +250,7 @@ vorpal
     if (payment) {
         showTransaction(payment.getTransaction())
     } else {
-        this.log(`no payment`)
+        log(`no payment`)
     }
     callback()
   })
@@ -239,7 +263,7 @@ vorpal
       payment.execute()
       showTransaction(payment.getTransaction())
     } else {
-        this.log(`no payment`)
+        log(`no payment`)
     }
     callback()
   })
@@ -253,7 +277,47 @@ vorpal
             log(await wallet.broadcast(payment.getTransaction()))
         })()
     } else {
-        this.log(`no payment`)
+        log(`no payment`)
+    }
+    callback()
+  })
+
+  vorpal
+  .command('fact <n>', 'requests peer to calculate factorial')
+  .action(function(args, callback) {
+    if (!peer) {
+      console.error(`You have no peer`)
+    } else {
+      if (!peer.xpub) {
+        console.error(`Your peer has not sent public Key`)
+      } else {
+        ; (async () => {
+          const bal = await wallet.getBalance()
+          if (bal < args.amount) {
+            console.error(`Your wallet balance is too low to send that amount`)
+          } else {
+            ; (async () => {
+                const paymenttx = await wallet.makeTransactionTo(peer.address, 600, 600)
+                payment = new ExchangeTransaction(wallet, paymenttx)
+                payment.addCommand(`#factorial ${args.n}`)
+                sendExchangeTransaction(payment)
+            })()
+          }
+        })()
+      }
+    }
+    callback()
+  })
+
+vorpal
+  .command('sign', 'finalize and sign the transaction')
+  .alias('s')
+  .action(function(args, callback) {
+    if (payment) {
+        payment.trimReturns()
+        wallet.sign(payment.getTransaction())
+    } else {
+        log(`no payment`)
     }
     callback()
   })

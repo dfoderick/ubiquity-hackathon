@@ -1,0 +1,32 @@
+{
+  "name": "ubiquity-hackathon",
+  "version": "1.0.0",
+  "description": "hack ubiquity",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dfoderick/ubiquity-hackathon.git"
+  },
+  "keywords": [
+    "p2p",
+    "bitcoin",
+    "transaction",
+    "malleability"
+  ],
+  "author": "David Foderick",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dfoderick/ubiquity-hackathon/issues"
+  },
+  "homepage": "https://github.com/dfoderick/ubiquity-hackathon#readme",
+  "dependencies": {
+    "dat-swarm-defaults": "^1.0.2",
+    "discovery-swarm": "^5.1.4",
+    "get-port": "^5.0.0",
+    "portfinder": "^1.0.20",
+    "vorpal": "^1.12.0"
+  }
+}

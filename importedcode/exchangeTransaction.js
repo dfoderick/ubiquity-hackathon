@@ -283,8 +283,7 @@ class ExchangeTransaction {
           && this.transaction.inputs[0].getDataScript()) {
             const si = new Interpreter()
             const scriptEval = this.transaction.inputs[0].script.getNextScriptSection(true)
-            if (scriptEval.isPublicKeyHashIn() || scriptEval.isScriptHashOut()) {
-                // if p2pkh or p2sh then 
+            if (!scriptEval.isPublicKeyHashIn() && !scriptEval.isScriptHashOut()) {
                 const verified = si.verify(scriptEval, bsv.Script(''))
                 // if stack is empty for this section then remove that section of script
                 if (!verified && si.stack.length === 0) {
@@ -298,6 +297,8 @@ class ExchangeTransaction {
                     //remove op_codeseparator?
                 }
             }
+        } else {
+            this.log(`cannot execute transaction`)
         }
     }
 

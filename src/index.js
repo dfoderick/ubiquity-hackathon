@@ -220,10 +220,40 @@ vorpal
   })
 
 vorpal
-  .command('d', 'debug. show payment transaction')
+  .command('debug', 'debug. show payment transaction')
+  .alias('d')
   .action(function(args, callback) {
     if (payment) {
         showTransaction(payment.getTransaction())
+    } else {
+        this.log(`no payment`)
+    }
+    callback()
+  })
+
+vorpal
+  .command('execute', 'Execute script on the payment transaction.')
+  .alias('x')
+  .action(function(args, callback) {
+    if (payment) {
+      payment.execute()
+      showTransaction(payment.getTransaction())
+    } else {
+        this.log(`no payment`)
+    }
+    callback()
+  })
+
+vorpal
+  .command('broadcast', 'broadcast the transaction')
+  .alias('b')
+  .action(function(args, callback) {
+    if (payment) {
+        ; (async () => {
+            log(await wallet.broadcast(payment.getTransaction()))
+        })()
+    } else {
+        this.log(`no payment`)
     }
     callback()
   })
@@ -345,3 +375,4 @@ function showTransaction(tx) {
         log(ex)
     }
 }
+

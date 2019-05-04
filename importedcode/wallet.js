@@ -180,8 +180,29 @@ class Wallet {
           vorpal.log(`Utxo${x} ${JSON.stringify(utxos[x])}`)
       }
       })()
-
     }
+
+    async broadcast(tx) {
+        if (!tx) {
+            this.log(`No transaction to broacast!`)
+            return null
+        }
+        if (tx.getFee() > 1200) {
+            this.log(`Fee ${tx.getFee()} is too much!`)
+            return null
+        }
+        try {
+            //can be exception here is tx has negative fee, for example
+            const txsend = new bitcoinsource.Transaction(tx.serialize())
+            const api = this.getApi()
+            const result = await api.sendTransaction(txsend)
+            return result
+        } catch (ex) {
+            this.log(ex)
+        }
+        return null
+    }
+
 
 }
 

@@ -83,5 +83,8 @@ Make sure Satoshi has balance in wallet. If needed, fund the address with moneyb
 |Peer1 (Satoshi)|Peer2 (Hal)|
 |----|----|
 |stream|displays will show data stream and payment metering|
-|stop|x (execute script)|
-||b (broadcast)|
+|stop||
+|x (execute script)||
+|s (sign)||
+|b (broadcast)||
+* There is bug here. Hal is supposed to be able to broadcast the last tx.

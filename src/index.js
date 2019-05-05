@@ -92,6 +92,8 @@ async function startSwarm () {
                 //TODO: use different method name
                 payment.addCommand(packetData)
                 sendExchangeTransaction(payment)
+                //need to remove the data that was pushed
+                payment.execute()
             }
             timeOutVar = setTimeout(function(){stream();}, 1000);
         }

@@ -5,7 +5,7 @@ var Interpreter = bsv.Script.Interpreter
 // Contains multiple outputs of various types
 // # starts a command
 // 010 starts a serialized tx
-// any other OP_RETURN else is a simple text message
+// any other OP_RETURN is a simple text message
 // other outputs are P2PKH or P2SH
 class ExchangeTransaction {
     constructor(wallet, transaction) {
@@ -291,25 +291,45 @@ class ExchangeTransaction {
         }
     }
 
+    getScriptSections(script, includeSeparator) {
+        const sections = []
+        let scriptSection = bsv.Script()
+        for (let x = 0; x < script.chunks.length; x++) {
+            const op = script.chunks[x]
+            if (op.opcodenum === bsv.Opcode.OP_CODESEPARATOR) {
+                if (includeSeparator) {
+                    scriptSection.add(op)
+                }
+                sections.push(scriptSection)
+                scriptSection = bsv.Script()
+            }
+            scriptSection.add(op)
+        }
+        return sections
+    }
+
     // execute the sigScript
     execute() {
         if (this.transaction 
-          && this.transaction.inputs.length > 0
-          && this.transaction.inputs[0].getDataScript()) {
+          && this.transaction.inputs.length > 0) {
             const si = new Interpreter()
-            const scriptEval = this.transaction.inputs[0].script.getNextScriptSection(true)
-            if (!scriptEval.isPublicKeyHashIn() && !scriptEval.isScriptHashOut()) {
-                const verified = si.verify(scriptEval, bsv.Script(''))
-                // if stack is empty for this section then remove that section of script
-                if (!verified && si.stack.length === 0) {
-                    if (si.errstr === 'SCRIPT_ERR_EVAL_FALSE_NO_RESULT') {
-                        console.log(`to delete: ${scriptEval.toString()}`)
-                        this.transaction.inputs[0].script.findAndDelete(scriptEval)
-                        this.transaction.inputs[0].setDataScript(null)
-                        console.log(`data script removed. tx malleated.`)
+            //TODO: assumes there are no duplicate code sections. That needs testing
+            const sections = this.getScriptSections(this.transaction.inputs[0].script, true)
+            for (let x = 0; x < sections.length; x++) {
+                const scriptEval = sections[x]
+                if (!scriptEval.isPublicKeyHashIn() && !scriptEval.isScriptHashOut()) {
+                    const verified = si.verify(scriptEval, bsv.Script(''))
+                    // if stack is empty for this section then remove that section of script
+                    if (!verified && si.stack.length === 0) {
+                        if (si.errstr === 'SCRIPT_ERR_EVAL_FALSE_NO_RESULT') {
+                            console.log(`to delete: ${scriptEval.toString()}`)
+                            this.transaction.inputs[0].script.findAndDelete(scriptEval)
+                            this.transaction.inputs[0].setDataScript(null)
+                            console.log(`data script removed. tx malleated.`)
+                        }
+                    } else {
+                        //remove op_codeseparator?
                     }
-                } else {
-                    //remove op_codeseparator?
                 }
             }
         } 

@@ -75,18 +75,22 @@ async function startSwarm () {
         }
     }
 
+    let packetNumber = 1
     function stream (terminator = false) {
         if (terminator) {
             clearTimeout(timeOutVar);
         } else {
             if (payment) {
+                let packetData = `Packet Data #${packetNumber}`
+                packetNumber += 1
                 //increment payment
-                // log(`pay`)
                 //cannot set from address here because peer is not defined?
                 //payment.fromAddress = peer.address
                 payment.toAddress = wallet.walletContents.address
                 payment.pay(10)
-                console.log(`Payment $ ${payment.paymentTo(wallet.walletContents.address)}`)
+                console.log(`Payment $ ${payment.paymentTo(wallet.walletContents.address)} for ${packetData}`)
+                //TODO: use different method name
+                payment.addCommand(packetData)
                 sendExchangeTransaction(payment)
             }
             timeOutVar = setTimeout(function(){stream();}, 1000);
@@ -105,8 +109,12 @@ async function startSwarm () {
             payment = extx
             payment.fromAddress = peer.address
             payment.toAddress = wallet.walletContents.address
-            log(`Payment $ ${payment.paymentTo(wallet.walletContents.address)}`)
             msg = payment.getCommand()
+            if (msg && !msg.startsWith('#')) {
+                log(`Payment $ ${payment.paymentTo(wallet.walletContents.address)} for ${msg}`)
+            } else {
+                log(`Payment $ ${payment.paymentTo(wallet.walletContents.address)}`)
+            }
         }
         //peer has changed their handle
         if (msg.startsWith('#iam ')) {

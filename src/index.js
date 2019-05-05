@@ -167,8 +167,6 @@ async function startSwarm () {
             stream(true)
             extx.execute()
             sendExchangeTransaction(extx)
-            //desperate times...
-            payment = null
         }
     })
 

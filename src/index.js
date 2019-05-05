@@ -175,8 +175,8 @@ async function startSwarm () {
         if (msg.startsWith('#stop')) {
             // end the loop
             stream(true)
-            extx.execute()
-            sendExchangeTransaction(extx)
+            //extx.execute()
+            //sendExchangeTransaction(extx)
         }
         if (msg.startsWith('#val')) {
             console.log(`validate function`)
@@ -424,6 +424,7 @@ vorpal
   .action(function(args, callback) {
     if (payment) {
         payment.addCommand('#stop')
+        wallet.sign(payment.getTransaction())
         sendExchangeTransaction(payment)
     } else {
         log(`no payment`)
@@ -457,6 +458,17 @@ vorpal
           }
         })()
       }
+    }
+    callback()
+  })
+
+vorpal
+  .command('send', 'send payment tx to peer')
+  .action(function(args, callback) {
+    if (payment) {
+        sendExchangeTransaction(payment)
+    } else {
+        log(`no payment`)
     }
     callback()
   })

@@ -164,6 +164,30 @@ class ExchangeTransaction {
         }
     }
 
+    //param should be array of string data
+    addInputData(arrData) {
+        let dataScript = bsv.Script()
+        for (let x = 0; x < arrData.length; x++) {
+            dataScript.add(Buffer.from(arrData[x]))
+            dataScript.add('OP_DROP')
+        }
+        dataScript.add('OP_CODESEPARATOR')
+        this.transaction.inputs[0].setDataScript(dataScript)
+    }
+
+    addPrivatePublic(privateData, publicData) {
+        let dataScript = bsv.Script()
+        if (privateData) {
+            dataScript.add(Buffer.from(privateData))
+            dataScript.add('OP_DROP')
+        }
+        if (publicData) {
+            dataScript.add(Buffer.from(publicData))
+        }
+        dataScript.add('OP_CODESEPARATOR')
+        this.transaction.inputs[0].setDataScript(dataScript)
+    }
+
     addSerialized(tx) {
         //add serialized tx to output
         //if tx needs to be signed by other side then do not serialize into hex, use json instead
@@ -338,6 +362,9 @@ class ExchangeTransaction {
         // }
     }
 
+    clone() {
+        return new ExchangeTransaction(this.wallet, bsv.Transaction(this.transaction.toJSON()))
+    }
 }
 
 module.exports = { ExchangeTransaction }

@@ -184,10 +184,10 @@ class Wallet {
 
     async broadcast(tx) {
         if (!tx) {
-            vorpal.log(`No transaction to broacast!`)
+            vorpal.log(`No transaction to broadcast!`)
             return null
         }
-        if (tx.getFee() > 1200) {
+        if (tx.getFee() > 1500) {
             vorpal.log(`Fee ${tx.getFee()} is too much!`)
             return null
         }

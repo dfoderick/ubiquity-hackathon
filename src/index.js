@@ -176,6 +176,23 @@ async function startSwarm () {
             extx.execute()
             sendExchangeTransaction(extx)
         }
+        if (msg.startsWith('#val')) {
+            console.log(`validate function`)
+            const valtx = new bsv.Transaction(Buffer.from(extx.getTransaction().inputs[0].script.chunks[2].buf).toString())
+            // TODO: this is placeholder for validation function. it would validate that
+            // tx is in a block or mempool
+            let validationResult = true
+            if (valtx.hash.substr(-1) < '9') {
+                validationResult = false
+            }
+            extx.execute()
+            //broadcast tx
+            broadcastExchangeTransaction(extx)
+            //send result to peer
+            var clone = extx.clone()
+            clone.addData(`result:${validationResult}`)
+            sendExchangeTransaction(clone)
+        }
     })
 
     conn.on('close', () => {
@@ -409,6 +426,36 @@ vorpal
     callback()
   })
 
+  vorpal
+  .command('validatetx', 'Validates Tx in mempool or a block')
+  .alias('val')
+  .action(function(args, callback) {
+    if (!peer) {
+      console.error(`You have no peer`)
+    } else {
+      if (!peer.xpub) {
+        console.error(`Your peer has not sent public Key`)
+      } else {
+        let amount = 600
+        ; (async () => {
+          const bal = await wallet.getBalance()
+          if (bal < amount) {
+            console.error(`Your wallet balance is too low to send that amount`)
+          } else {
+            ; (async () => {
+                const paymenttx = await wallet.makeTransactionTo(peer.address, amount, 600)
+                const dummytx = await wallet.makeTransactionTo(peer.address, 2, 1)
+                payment = new ExchangeTransaction(wallet, paymenttx)
+                payment.addInputData([`#val`, dummytx.uncheckedSerialize()])
+                sendExchangeTransaction(payment)
+            })()
+          }
+        })()
+      }
+    }
+    callback()
+  })
+
 let commandPrompt = 'ubiquity$'
 vorpal
   .delimiter(`${commandPrompt}`)
@@ -533,3 +580,18 @@ function showTransaction(tx) {
     }
 }
 
+function broadcastExchangeTransaction(extx) {
+    try {
+        if (extx) {
+            ; (async () => {
+                log(await wallet.broadcast(extx.getTransaction()))
+            })()
+        } else {
+            log(`no payment`)
+        }
+    }
+    catch (ex) {
+        log(ex)
+    }
+
+}

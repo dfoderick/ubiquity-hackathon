@@ -172,28 +172,38 @@ class ExchangeTransaction {
     }
 
     paymentTo(address) {
-        //get payment from serialized output?
-        //sum outputs to an address
-        let amount = 0
-        if (this.transaction.outputs.length === 0 ) {
-            return amount
-        }
-        const toScript = bsv.Script.buildPublicKeyHashOut(this.toAddress).toString()
-        for (let x = 0; x < this.transaction.outputs.length ; x++) {
-            if (this.transaction.outputs[x].script == toScript) {
-                amount += this.transaction.outputs[x].satoshis
+        try {
+            //get payment from serialized output?
+            //sum outputs to an address
+            let amount = 0
+            if (this.transaction.outputs.length === 0 ) {
+                return amount
             }
+            const toScript = bsv.Script.buildPublicKeyHashOut(address).toString()
+            for (let x = 0; x < this.transaction.outputs.length ; x++) {
+                if (this.transaction.outputs[x].script == toScript) {
+                    amount += this.transaction.outputs[x].satoshis
+                }
+            }
+            return amount
+        } catch (error) {
+            console.log(`address ${address}`)
+            console.log(error)
+            return 0
         }
-        return amount
     }
 
     getFromOutput() {
         let fromOut = null
         const fromScript = bsv.Script.buildPublicKeyHashOut(this.fromAddress).toHex()
         for (let x = 0; x < this.transaction.outputs.length ; x++) {
-            if (this.transaction.outputs[x].script == fromScript) {
+            if (this.transaction.outputs[x].script.toHex() == fromScript) {
                 return this.transaction.outputs[x]
-            }
+            } 
+            // else {
+            //     console.log(this.transaction.outputs[x].script.toHex())
+            //     console.log(fromScript)
+            // }
         }
         return fromOut
     }
@@ -210,10 +220,15 @@ class ExchangeTransaction {
 
     //pass amount in satoshis
     pay(amount) {
+        if (!this.fromAddress) {
+            console.log(`from address not set!`)
+        }
         if (this.fromAddress) {
             let fromOut = this.getFromOutput()
             if (fromOut) {
                 fromOut.satoshis -= amount
+            } else {
+                console.log(`no from output found!`)
             }
         }
         let to = null
@@ -297,9 +312,10 @@ class ExchangeTransaction {
                     //remove op_codeseparator?
                 }
             }
-        } else {
-            this.log(`cannot execute transaction`)
-        }
+        } 
+        // else {
+        //     console.log(`cannot execute transaction (either no inputs or no dataScript)`)
+        // }
     }
 
 }

@@ -23,6 +23,10 @@ const wallet = new Wallet()
 // the payment tx exchanged between peers
 let payment = null
 
+function setPeer(p) {
+    peer = p
+}
+
 // Peer Identity, a random hash to identify your peer
 const myId = crypto.randomBytes(32)
 /** 
@@ -71,14 +75,37 @@ async function startSwarm () {
         }
     }
 
+    function stream (terminator = false) {
+        if (terminator) {
+            clearTimeout(timeOutVar);
+        } else {
+            if (payment) {
+                //increment payment
+                // log(`pay`)
+                //cannot set from address here because peer is not defined?
+                //payment.fromAddress = peer.address
+                payment.toAddress = wallet.walletContents.address
+                payment.pay(10)
+                console.log(`Payment $ ${payment.paymentTo(wallet.walletContents.address)}`)
+                sendExchangeTransaction(payment)
+            }
+            timeOutVar = setTimeout(function(){stream();}, 1000);
+        }
+    }
+
     conn.on('data', data => {
+        //TODO: I think this is a bug!!! Makes it seem last peer to connect is always the direct peer?
+        //use setPeer to set the correct peer at module level
         const peer = peers[peerId]
-        log(`Received message from peer ${peer.handle || peer.id } ---> ${showObject(data)}`)
+        // log(`Received message from peer ${peer.handle || peer.id } ---> ${showObject(data)}`)
         //commands received from peer will go here. data can be string object or tx json
         let msg = data.toString()
         const extx = getTransactionFromData(data.toString())
         if (extx) {
             payment = extx
+            payment.fromAddress = peer.address
+            payment.toAddress = wallet.walletContents.address
+            log(`Payment $ ${payment.paymentTo(wallet.walletContents.address)}`)
             msg = payment.getCommand()
         }
         //peer has changed their handle
@@ -86,7 +113,7 @@ async function startSwarm () {
             peer.handle = msg.replace('#iam ','')
             log(`Peer handle updated to ${peer.handle}`)
         }
-        //peer has broadcasted public key and address
+        //peer has broadcast public key and address
         if (msg.startsWith('#xpub ')) {
           const payload = msg.replace('#xpub ','').split(' ')
           peer.xpub = payload[0]
@@ -98,10 +125,11 @@ async function startSwarm () {
         //peer is hailing us
         if (msg.startsWith('#@ ')) {
           const requestedPeer = msg.replace('#@ ','')
-          peer = Object.values(peers).find(p => p.handle && p.handle === requestedPeer)
-          if (peer) {
-            log(`Connected to peer ${peer.handle || peer.id}`)
-            sendpeer(peer, `#xpub ${wallet.walletContents.xpub} ${wallet.walletContents.address}`)
+          p2ppeer = Object.values(peers).find(p => p.handle && p.handle === requestedPeer)
+          if (p2ppeer) {
+            setPeer(p2ppeer)
+            log(`Connected to peer ${p2ppeer.handle || p2ppeer.id}`)
+            sendpeer(p2ppeer, `#xpub ${wallet.walletContents.xpub} ${wallet.walletContents.address}`)
           } else {
             log(`Unknown peer handle ${requestedPeer}`)
           }
@@ -119,18 +147,28 @@ async function startSwarm () {
                 result *= cnt
                 const loopDescription = `factorial of ${cnt} is ${result}`
                 vorpal.log(loopDescription)
-                //add op_return to transaction
                 extx.addData(loopDescription)
                 extx.pay(10)
             }
             extx.addData(`result:${result}`)
-            //extx.addRefundOutput()
             log(`result ${result}`)
             //send result back to caller
-            //extx.trimReturns()
             //execute the script so that command is removed. avoids infinite loop
             extx.execute()
             sendExchangeTransaction(extx)
+        }
+        if (msg.startsWith('#stream')) {
+            // start a loop that will stream data to peer
+            payment.execute()
+            stream()
+        }
+        if (msg.startsWith('#stop')) {
+            // end the loop
+            stream(true)
+            extx.execute()
+            sendExchangeTransaction(extx)
+            //desperate times...
+            payment = null
         }
     })
 
@@ -187,6 +225,8 @@ vorpal
     const handle = args.peer
     peer = Object.values(peers).find(p => p.handle && p.handle === handle)
     if (peer) {
+        sendpeer(peer, `#@ ${myhandle}`)
+        sendpeer(peer, `#xpub ${wallet.walletContents.xpub} ${wallet.walletContents.address}`)
         let peerPrompt = peer.handle || peer.id
         const newPrompt = `${myhandle}<->${peerPrompt}$` 
         vorpal.delimiter(newPrompt)
@@ -291,13 +331,14 @@ vorpal
       if (!peer.xpub) {
         console.error(`Your peer has not sent public Key`)
       } else {
+        let amount = 600
         ; (async () => {
           const bal = await wallet.getBalance()
-          if (bal < args.amount) {
+          if (bal < amount) {
             console.error(`Your wallet balance is too low to send that amount`)
           } else {
             ; (async () => {
-                const paymenttx = await wallet.makeTransactionTo(peer.address, 600, 600)
+                const paymenttx = await wallet.makeTransactionTo(peer.address, amount, 600)
                 payment = new ExchangeTransaction(wallet, paymenttx)
                 payment.addCommand(`#factorial ${args.n}`)
                 sendExchangeTransaction(payment)
@@ -316,6 +357,46 @@ vorpal
     if (payment) {
         payment.trimReturns()
         wallet.sign(payment.getTransaction())
+    } else {
+        log(`no payment`)
+    }
+    callback()
+  })
+
+vorpal
+  .command('stream', 'starts a data stream pull with peer')
+  .action(function(args, callback) {
+    if (!peer) {
+      console.error(`You have no peer`)
+    } else {
+      if (!peer.xpub) {
+        console.error(`Your peer has not sent public Key`)
+      } else {
+        ; (async () => {
+          const bal = await wallet.getBalance()
+          let amount = 600
+          if (bal < amount) {
+            console.error(`Your wallet balance is too low to send that amount`)
+          } else {
+            ; (async () => {
+                const paymenttx = await wallet.makeTransactionTo(peer.address, amount, 600)
+                payment = new ExchangeTransaction(wallet, paymenttx)
+                payment.addCommand(`#stream`)
+                sendExchangeTransaction(payment)
+            })()
+          }
+        })()
+      }
+    }
+    callback()
+  })
+
+vorpal
+  .command('stop', 'stop the data stream')
+  .action(function(args, callback) {
+    if (payment) {
+        payment.addCommand('#stop')
+        sendExchangeTransaction(payment)
     } else {
         log(`no payment`)
     }
@@ -358,7 +439,11 @@ function listPeers() {
 }
 
 function sendpeer(peer, message) {
-    peer.conn.write(message)
+    if (peer) {
+        peer.conn.write(message)
+    } else {
+        log(`No peer connection!`)
+    }
 }
 
 function broadcast(message) {
@@ -382,6 +467,8 @@ function sendExchangeTransaction(extx) {
             log(tx)
             log(ex)
         }
+    } else {
+        console.log(`sendExchangeTransaction but there is no peer`)
     }
     return null
 }

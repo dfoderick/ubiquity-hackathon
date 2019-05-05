@@ -163,23 +163,27 @@ class Wallet {
     }
 
     show() {
-      vorpal.log(`address ${this.walletContents.address}`)
-      vorpal.log(`xpub ${this.walletContents.xpub}`)
-      vorpal.log(`scriptPubKey ${this.scriptPubKey.toString()}`)
-      vorpal.log(`scriptPubKey ${this.scriptPubKey.toHex()}`)
-      //get balance
-      const api = this.getApi()
-      const addrObj = new bitcoinsource.Address(this.walletContents.address)
-      ; (async () => {
-        const bal = await api.getBalance(addrObj)
-        vorpal.log(`Balance ${bal}`)
-      })()
-      ; (async () => {
-        const utxos = await api.getUtxos(addrObj)
-        for (let x = 0; x < utxos.length; x++) {
-          vorpal.log(`Utxo${x} ${JSON.stringify(utxos[x])}`)
-      }
-      })()
+        if (!this.walletContents) {
+            vorpal.log(`wallet not loaded yet. use 'iam' command to annouce yourself first.`)
+        } else {
+            vorpal.log(`address ${this.walletContents.address}`)
+            vorpal.log(`xpub ${this.walletContents.xpub}`)
+            vorpal.log(`scriptPubKey ${this.scriptPubKey.toString()}`)
+            vorpal.log(`scriptPubKey ${this.scriptPubKey.toHex()}`)
+            //get balance
+            const api = this.getApi()
+            const addrObj = new bitcoinsource.Address(this.walletContents.address)
+            ; (async () => {
+                const bal = await api.getBalance(addrObj)
+                vorpal.log(`Balance ${bal}`)
+            })()
+            ; (async () => {
+                const utxos = await api.getUtxos(addrObj)
+                for (let x = 0; x < utxos.length; x++) {
+                vorpal.log(`Utxo${x} ${JSON.stringify(utxos[x])}`)
+            }
+            })()
+        }
     }
 
     async broadcast(tx) {

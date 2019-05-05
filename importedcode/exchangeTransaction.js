@@ -176,16 +176,19 @@ class ExchangeTransaction {
     }
 
     addPrivatePublic(privateData, publicData) {
-        let dataScript = bsv.Script()
-        if (privateData) {
-            dataScript.add(Buffer.from(privateData))
-            dataScript.add('OP_DROP')
+        if (privateData || publicData) {
+            let dataScript = bsv.Script()
+            if (privateData) {
+                dataScript.add(Buffer.from(privateData))
+                dataScript.add('OP_DROP')
+                dataScript.add('OP_CODESEPARATOR')
+            }
+            if (publicData) {
+                dataScript.add(Buffer.from(publicData))
+                dataScript.add('OP_CODESEPARATOR')
+            }
+            this.transaction.inputs[0].setDataScript(dataScript)
         }
-        if (publicData) {
-            dataScript.add(Buffer.from(publicData))
-        }
-        dataScript.add('OP_CODESEPARATOR')
-        this.transaction.inputs[0].setDataScript(dataScript)
     }
 
     addSerialized(tx) {
@@ -356,6 +359,7 @@ class ExchangeTransaction {
                     }
                 }
             }
+            //this.transaction.inputs[0].script.findAndDelete(new bsv.Script().add(bsv.Opcode.OP_CODESEPARATOR))
         } 
         // else {
         //     console.log(`cannot execute transaction (either no inputs or no dataScript)`)

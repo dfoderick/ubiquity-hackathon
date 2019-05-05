@@ -272,6 +272,8 @@ vorpal
 
 vorpal
   .command('pay <amount> <fee>', 'sends payment tx to peer. peer will broadcast')
+  .option('-f, --fyeo <private>', 'a private message to peer. For Your Eyes Only')
+//  .option('-p, --public <public>', 'public data that will recorded to blockchain')
   .action(function(args, callback) {
     if (!peer) {
       console.error(`You have no peer`)
@@ -288,7 +290,8 @@ vorpal
                 const paymenttx = await wallet.makeTransactionTo(peer.address, args.amount, args.fee )
                 payment = new ExchangeTransaction(wallet, paymenttx)
                 //TODO add custom message instead
-                payment.addCommand('#payment')
+                // payment.addCommand('#payment')
+                payment.addPrivatePublic(args.options.fyeo, args.options.public)
                 sendExchangeTransaction(payment)
             })()
           }

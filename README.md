@@ -1,9 +1,5 @@
 # ubiquity-hackathon
 
-Pending documents to be uploaded to /docs
-- Project description
-- Ideas for UI
-
 Technical highlights
 - Extend the reach of the bitcoin protocol into the p2p model
 - Use direct P2P channels built upon the [dat project](https://datproject.org/)
@@ -21,8 +17,13 @@ Bitcoin Ubiquity means...
 
 For more background information on the project please refer to the [docs/README.md file](docs/README.md).  
 
+# Notes on code
+This project requires a modified bsv library. See https://github.com/dfoderick/bsv/tree/p2p. 
+This branch will be installed using `npm install`. See package.json file for details.  
+
+There is a wallet module that I copied from an existing project. I placed all copied code into /importedcode directory.
+
 # Install and Run
-This project requires a modified bsv library. See https://github.com/dfoderick/bsv/tree/p2p. This branch will be installed using `npm install`. See package.json file for details.  
 
 ```
 git clone https://github.com/dfoderick/ubiquity-hackathon

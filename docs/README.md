@@ -1,7 +1,7 @@
 
 # P2P Channels
 
-P2P offers a third paradigm for application architecture. Traditional web programming is centralized because it relies on a web server and database to deliver content. More recently, BSV apps load content from the blockchain, i.e. blockchain as a content delivery system. In comparison, P2P follows a distinctive paradigm distinguished by direct P2P communication and serving content from a peer computer. It is a different animal and deserves thoughtful consideration as to its peculiarities. A careful study of this project illuminates some of those differences.
+P2P offers a third paradigm for application architecture. Traditional centralized web programming relies on a web server and database to deliver content (https://wiki.p2pfoundation.net/Centralized_Web). More recently, BSV apps load content from the blockchain, i.e. blockchain as a content delivery system. In comparison, P2P follows a distinctive paradigm distinguished by direct P2P communication and serving content from a peer computer. It is a different animal and deserves thoughtful consideration as to its peculiarities. A careful study of this project illuminates some of those differences.
 
 # Market Fit
 Numerous opportunities abound for making P2P channel solutions. The following items touch on just some of the revenue possibilies.

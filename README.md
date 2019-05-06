@@ -73,16 +73,16 @@ iam = announces your handle and switches to the wallet with that name (i.e. wall
 `d` = debug. shows the current payment transaction    
 `x` = execute. execute the scriptSig if there are pushdata opcodes  
 `s` = sign. sign the current payment tx  
-`b` = broadcast the current payment tx. if fails look at error meesage. There is [help at end of this document](#error-codes).
+`b` = broadcast the current payment tx. If it fails then look at the error meesage. There is [help at end of this document](#error-codes).
 
 Other commands that will be used in examples.  
 `pay <amount> <fee>` = sends payment tx to peer for that amount. You can consolidate utxo by paying peer. peer should `x` and `b` to broadcast.  
-`val` = pays peer to validate tx. use 'd' to show results.  
+`val` = pays peer to validate tx. use `d` to show results.  
 `stream` = start streaming. displays meter of running costs.  
 `stop` = stops the stream. peer that started the stream will need to execute, sign and broadcast.  
 
 # General setup for each example
-After running `node src/index` you initialize a direct p2p connection using the `iam` and `@` commands as shown below. Enter the commands by row. For exmple, enter 'iam satoshi' in terminal 1 then 'iam hal' in terminal 2. Then proceed to the next line.
+After running `node src/index` you initialize a direct p2p connection using the `iam` and `@` commands as shown below. Enter the commands by row. For exmple, enter `iam satoshi` in terminal 1 then `iam hal` in terminal 2. Then proceed to the next line. In other words, Satoshi needs to know that Hal is a peer before he can create a direct connection with the `@` command.
 
 |Peer1 (Satoshi)|Peer2 (Hal)|
 |----|----|
@@ -92,7 +92,7 @@ After running `node src/index` you initialize a direct p2p connection using the 
 
 Peers will automatically exchange public keys when after the `@` command is issued.
 
-Make sure Satoshi has balance in wallet (see output of `w` command). If needed, fund the address with moneybutton. If needed, consolidate utxos using the `pay` command.
+Make sure Satoshi has balance in wallet (see output of `w` command). If needed, fund the address with moneybutton (Send Money https://www.moneybutton.com/money). If needed, consolidate utxos using the `pay` command.
 
 The following examples might be safe to run in order, without resetting the app. The app only keeps track of one payment transaction (shown with the `d` command)
 
@@ -114,7 +114,7 @@ In the early days of mining a user could leave their computer hashing at night a
 
 Under this proposal, Providers get paid by performing specialized calculations. They would simply leave their computer on and when someone uses it for a calculation then they get paid. It is not presented here but there would probably be a P2P marketplace between the user and the provider that would perform peer discovery (match peers).
 
-Note the use of pushing a serialized transaction onto the stack in this example. It can see in the output of Hal's comsole.
+Note the use of pushing a serialized transaction onto the stack in this example. It can be seen in the output of Hal's console.
 
 Numerous means exist for providers to capture streams of revenue. Some ideas include ...
  - Transaction validation
@@ -124,19 +124,19 @@ Numerous means exist for providers to capture streams of revenue. Some ideas inc
 
 |Peer1 (Satoshi)|Peer2 (Hal)|
 |----|----|
-|val|Hal will get the serialized tx from the stack, validate the tx, broadcast the payment and send the result (true/false) to Satoshi|
-|d (to see result)|w (to see payment in wallet)|
+|`val`|Hal will get the serialized tx from the stack, validate the tx, broadcast the payment and send the result (true/false) to Satoshi|
+|`d` (to see result)|`w` (to see payment in wallet)|
 
 ![validate](docs/validate_after.png)
 
 # Example 3: Stream micro-payments for usage metering
-This example uses a micro payment channel for metering data usage. It does not actually show a video stream but the idea is that the data stream would include packets of video or some other data. The important thing is to see how Hal's balance goes up while Satoshis decreases. It could be used for people who agree to watch a video in exchange for BSV (advertising, for example). Earn money while browing the internet, clicking on adds, filling out product surveys, live streaming of events. Anything with metered usage.
+This example uses a micro payment channel for metering data usage. It does not actually show a video stream but the idea is that the data stream would include packets of video or some other data. The important thing is to see how Hal's balance goes up while Satoshis decreases. It could be used for people who agree to watch a video in exchange for BSV (advertising, for example). Earn money while browsing the internet, clicking on adds, filling out product surveys, live streaming of events. Anything with metered usage.
 
 |Peer1 (Satoshi)|Peer2 (Hal)|
 |----|----|
-|stream|Displays will show data stream and payment metering|
-|stop| x (execute script)|
-|| b (broadcast)|
+|`stream`|Displays will show data stream and payment metering|
+|`stop`| `x` (execute script)|
+|| `b` (broadcast)|
 
 ![stream](docs/stream_after.png)
 

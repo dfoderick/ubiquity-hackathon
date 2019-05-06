@@ -191,7 +191,7 @@ class Wallet {
             vorpal.log(`No transaction to broadcast!`)
             return null
         }
-        if (tx.getFee() > 1500) {
+        if (tx.getFee() > 2000) {
             vorpal.log(`Fee ${tx.getFee()} is too much!`)
             return null
         }

@@ -1,7 +1,5 @@
 # ubiquity-hackathon
 
-For more background information on the project please refer to the [docs/README.md file](docs/README.md).  
-
 Pending documents to be uploaded to /docs
 - Project description
 - Ideas for UI
@@ -20,6 +18,8 @@ Bitcoin Ubiquity means...
  - When a peer gives you script then execute the script.
  - P2P extends the reach of the bitcoin protocol.
  - Exchange all data within the protocol.
+
+For more background information on the project please refer to the [docs/README.md file](docs/README.md).  
 
 # Install and Run
 This project requires a modified bsv library. See https://github.com/dfoderick/bsv/tree/p2p. This branch will be installed using `npm install`. See package.json file for details.  

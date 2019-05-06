@@ -1,9 +1,8 @@
 # ubiquity-hackathon
 
 Technical highlights
-- Extend the reach of the bitcoin protocol into the p2p model
+- Extend the reach of the Bitcoin protocol using P2P channels
 - Use direct P2P channels built upon the [dat project](https://datproject.org/)
-- P2P data exchange over payment channels
 - Execute script before broadcasting a transaction
 - Malleate Tx by executing scriptSig
 - Push serialized transactions onto stack by embedding them into other transactions
@@ -12,8 +11,8 @@ Bitcoin Ubiquity means...
  - There is value in the protocol. Use the Bitcoin protocol.
  - The Bitcoin protocol is data within script within a transaction.
  - When a peer gives you script then execute the script.
- - P2P extends the reach of the bitcoin protocol.
- - Exchange all data within the protocol.
+ - P2P extends the reach of the Bitcoin protocol.
+ - Every device communicates using the Bitcoin protocol.
 
 For more background information on the project please refer to the [docs/README.md file](docs/README.md).  
 
@@ -87,20 +86,20 @@ After running `node src/index` you initialize a direct p2p connection using the 
 
 |Peer1 (Satoshi)|Peer2 (Hal)|
 |----|----|
-|iam satoshi|iam hal|
-|@ hal||
-|w||
+|`iam satoshi` (prompt will change to $satoshi)|`iam hal` (prompt will change to $hal|
+|`@ hal` (prompt will change to satoshi<->hal)||
+|`w` (shows wallet balance) ||
 
-Peers will exchange public keys.
+Peers will automatically exchange public keys when after the `@` command is issued.
 
-Make sure Satoshi has balance in wallet. If needed, fund the address with moneybutton. If needed, consolidate utxos using the `pay` command.
+Make sure Satoshi has balance in wallet (see output of `w` command). If needed, fund the address with moneybutton. If needed, consolidate utxos using the `pay` command.
 
 The following examples might be safe to run in order, without resetting the app. The app only keeps track of one payment transaction (shown with the `d` command)
 
 # Example 1: Simple cash gifting with private messaging
-This example is a bit facetious but it provides an good introduction on how to use the app and shows off what p2p is doing under the hood.  Note the use of scriptSig malleation.
+This example is a bit facetious but it provides a good introduction on how to use the app and shows off how the peers are communicating.  Note the use of scriptSig malleation.
 
-How does this relate to onboarding? Satoshi was the original Bitcoin onboarder who sent 10 Bitcoin to Hal Finney. Gifting small payments is one way to onboard.
+How does this relate to onboarding? Satoshi was the original Bitcoin onboarder who sent 10 Bitcoin to Hal Finney. Gifting small payments is one way to onboard new users.
 
 |Peer1 (Satoshi)|Peer2 (Hal)|
 |----|----|
@@ -110,11 +109,12 @@ How does this relate to onboarding? Satoshi was the original Bitcoin onboarder w
 ||`w` (wallet balance has increased)|
 
 
-# Example 2: Earn BSV income as a Provider
-In the early days of mining a user could leave their computer hashing at night and wake up the next morning with some Bitcoin to spend. It was a simple method of onboarding new users using proof of work. We resurrect that idea below. 
-Providers get paid by performing specialized calculations. Under this proposal, they would leave their computer on and when someone uses it for a calculation then they get paid. It is not presented here but there would probably be a P2P marketplace between the user and the provider that would perform peer discovery (match peers).
+# Example 2: Earn BSV income as a P2P Service Provider
+In the early days of mining a user could leave their computer hashing at night and wake up the next morning with some Bitcoin to spend. It was a simple method of onboarding new users using Proof of Work. We resurrect that idea below. 
 
-Note the use of pushing a serialized transaction onto the stack in this example.
+Under this proposal, Providers get paid by performing specialized calculations. They would simply leave their computer on and when someone uses it for a calculation then they get paid. It is not presented here but there would probably be a P2P marketplace between the user and the provider that would perform peer discovery (match peers).
+
+Note the use of pushing a serialized transaction onto the stack in this example. It can see in the output of Hal's comsole.
 
 Numerous means exist for providers to capture streams of revenue. Some ideas include ...
  - Transaction validation
@@ -130,11 +130,11 @@ Numerous means exist for providers to capture streams of revenue. Some ideas inc
 ![validate](docs/validate_after.png)
 
 # Example 3: Stream micro-payments for usage metering
-This example uses a micro payment channel for metering data usage. It does not actually show a video stream but the idea is that the data stream would include packets of video or some other data - the user has to use their imagination on this one. The important thing is to see how Hal's balance goes up while Satoshis decreases. It could be used for people who agree to watch a video in exchange for BSV (advertising, for example). Earn money while browing the internet, clicking on adds, filling out product surveys, live streaming of events. Anything with metered usage.
+This example uses a micro payment channel for metering data usage. It does not actually show a video stream but the idea is that the data stream would include packets of video or some other data. The important thing is to see how Hal's balance goes up while Satoshis decreases. It could be used for people who agree to watch a video in exchange for BSV (advertising, for example). Earn money while browing the internet, clicking on adds, filling out product surveys, live streaming of events. Anything with metered usage.
 
 |Peer1 (Satoshi)|Peer2 (Hal)|
 |----|----|
-|stream|display will show data stream and payment metering|
+|stream|Displays will show data stream and payment metering|
 |stop| x (execute script)|
 || b (broadcast)|
 
@@ -143,8 +143,8 @@ This example uses a micro payment channel for metering data usage. It does not a
 * Bug Fixed. Hal is supposed to be able to broadcast the last tx since the `stop` command was signed by Satoshi. If Hal cannot broadcast then Satoshi can execute, sign and broadcast as a work around.
 
 # Known Issues
-1) Dust can build up rapidly. You have to clean up dust. Options: Rename wallet.json to wallet_backup. `iam` command will create a new wallet. Use pay command to send dust to peer. Use `<amount>` and `<fee>` to control the size of the transaction. If tx too big then broadcast locally.
-2) dat project has a limit on the size of a message. If you get json serialization errors you can try again. If it keeps happening then you need to reduce the size of the transaction.
+1) Dust can build up rapidly. You have to clean up dust. Options: Rename wallet.json to wallet_backup. `iam` command will create a new wallet. Use pay command to send dust to peer. Use `<amount>` and `<fee>` to control the size of the transaction. If the transaction size is too big (JSON errors) then execute and broadcast locally.
+2) dat project has a limit on the size of a message. If you get json serialization errors you can try the same command again. If it keeps happening then you need to reduce the size of the transaction.
 3) dat can sometimes lose the connection. Restart the app.
 4) Look carefully at broadcast errors. Often it is because you need to run `x` before `b`.
 

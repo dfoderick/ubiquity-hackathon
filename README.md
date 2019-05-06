@@ -74,7 +74,7 @@ iam = announces your handle and switches to the wallet with that name (i.e. wall
 `d` = debug. shows the current payment transaction    
 `x` = execute. execute the scriptSig if there are pushdata opcodes  
 `s` = sign. sign the current payment tx  
-`b` = broadcast the current payment tx. if fails look at error meesage. There is help in /docs
+`b` = broadcast the current payment tx. if fails look at error meesage. There is help at end of this document.
 
 Other commands that will be used in examples.  
 `pay <amount> <fee>` = sends payment tx to peer for that amount. You can consolidate utxo by paying peer. peer should `x` and `b` to broadcast.  
@@ -104,10 +104,8 @@ How does this relate to onboarding? Satoshi was the original Bitcoin onboarder w
 
 |Peer1 (Satoshi)|Peer2 (Hal)|
 |----|----|
-|`pay 2000 500 -f 'for your eyes only'`|`d` (debug). Notice that there is push data in scriptSig. Transaction is validly signed. ![tx before](docs/tx_before_malleate.png)
-|
-||`x` (execute script to malleate tx). Notice that any push data with a corresponding DROP has been removed. Tx is still validly signed. ![tx after](docs/tx_after_malleate.png)
-|
+|`pay 2000 500 -f 'for your eyes only'`|`d` (debug). Notice that there is push data in scriptSig. Transaction is validly signed. ![tx before](docs/tx_before_malleate.png)|
+||`x` (execute script to malleate tx). Notice that any push data with a corresponding DROP has been removed. Tx is still validly signed. ![tx after](docs/tx_after_malleate.png)|
 ||`b` (broadcast)|
 ||`w` (wallet balance has increased)|
 

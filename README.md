@@ -1,42 +1,45 @@
 # ubiquity-hackathon
 
+For more background information on the project please refer to the [docs/README.md file](docs/README.md).  
+
 Pending documents to be uploaded to /docs
 - Project description
 - Ideas for UI
 
 Technical highlights
 - Extend the reach of the bitcoin protocol into the p2p model
-- direct P2P channels using [dat project](https://datproject.org/)
-- Nakamoto style payment channels
+- Use direct P2P channels built upon the [dat project](https://datproject.org/)
+- P2P data exchange over payment channels
 - Execute script before broadcasting a transaction
-- Malleate Tx by executing script
+- Malleate Tx by executing scriptSig
 - Push serialized transactions onto stack by embedding them into other transactions
 
 Bitcoin Ubiquity means...
  - There is value in the protocol. Use the Bitcoin protocol.
  - The Bitcoin protocol is data within script within a transaction.
- - When a peers gives you script then execute the script.
+ - When a peer gives you script then execute the script.
  - P2P extends the reach of the bitcoin protocol.
-
-This project requires a modified bsv library. See https://github.com/dfoderick/bsv/tree/p2p. This branch will be installed using `npm install`. See package.json file.  
+ - Exchange all data within the protocol.
 
 # Install and Run
+This project requires a modified bsv library. See https://github.com/dfoderick/bsv/tree/p2p. This branch will be installed using `npm install`. See package.json file for details.  
+
 ```
 git clone https://github.com/dfoderick/ubiquity-hackathon
 cd ubiquity-hackathon
 npm install
 node src/index
 ```
-Note: If you get a 'git' error when trying to install then make sure you upgrade npm.
+Note: If you have a 'git' error when installing then you might need to upgrade npm.
 
 Once installed, app can be run with `node src/index`. Run from root of project so that the wallet knows how to find the existing wallets (satoshi and hal). The output is shown below.
 
-Note: Run two instances to simulate 2 peers on network.
+> Note: Run two instances to simulate 2 peers on network.
 
 See Known Issues at bottom of this document for help.
 
 ```
-C:\Users\Dave\ubiquity-hackathon>node src/index
+$node src/index
 You are Dave (d65efeab2a8e2557d1e61ec2c8ac27f6d2f4575d043a58f8afa835e64eaadf7f)
 Listening to port: 3791
 Subscribed to channel metanet
@@ -146,4 +149,32 @@ This example uses a micro payment channel for metering data usage. It does not a
 3) dat can sometimes lose the connection. Restart the app.
 4) Look carefully at broadcast errors. Often it is because you need to run `x` before `b`.
 
+# Error codes
+The following lists some common error message and how to fix or get around them. Most of these are tx broadcast errors.   
 
+vin-empty  
+    means there is no input to tx. usually will happen when a message envelope tx 
+    is getting broadcast instead of the embedded serialized tx
+
+16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation). Code:-26 
+    Seems like this error happens when signing too many times    
+    Still debugging but seems like error went away when removed signing of tx when sendpeer
+
+Dust amount detected in one output  
+    Means one of the outputs is 0 
+
+Change address is missing  
+ 
+undefined - For more information please see: https://bsv.io/api/lib/transaction#serialization-checks  
+    Means something is seriously wrong with tx. Negative outputs or fees.  
+
+Provided public keys don't hash to the provided output  
+    For multisig means both pub keys are not available
+
+Invalid state: Not all utxo information is available to sign the transaction  
+
+message 64: scriptsig-not-pushonly. Code:-26  
+    findAndDelete needs to be run on the inputs
+
+Transaction has no inputs to add Command!  
+    means pushdata could be added to tx because it doesnt have any inputs yet

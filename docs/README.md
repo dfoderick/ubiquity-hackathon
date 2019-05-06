@@ -30,7 +30,7 @@ Example 1, simple payment transfers, moneybutton would be the obvious choice. In
 Example 2, Provider earning revenue for performing calculations, the UI would be minimal. A simple display of running statistics and a stop/start button would suffice. It could be similar to this mining interface.
 ![Provider](UI_provider.png "Provider UI")
 
-Example 3, metered usage. Mostly users will want no UI, just a summary of charges when you settle up the channel. What users would want is that the payment channel would know who you are and understand your preference about when to get notified. For example, when cost of the payment channel is nearing whatever limits you supply then it would become increasingly annoying to alert you of the pending channel cut off. Similar to the battery charge indicator on your laptop.
+Example 3, metered usage. Mostly users will want no UI, just a summary of charges when you settle up the channel. What users would want is that the payment channel would know who you are and understand your preference about when to get notified. For example, when cost of the payment channel is nearing whatever limits you supply then it would escalate the alerts to notify you of the pending channel shut down. Similar to the battery charge indicator on your laptop.
 
 In general, these p2p channels will become so pervasive they will be nearly invisible. A rules engine will know your policies and preferences and alert you whenever you need to be alerted.
 

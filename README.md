@@ -175,4 +175,4 @@ message 64: scriptsig-not-pushonly. Code:-26
     findAndDelete needs to be run on the inputs
 
 Transaction has no inputs to add Command!  
-    means pushdata could be added to tx because it doesnt have any inputs yet
+    means pushdata could not be added to tx because it doesnt have any inputs yet

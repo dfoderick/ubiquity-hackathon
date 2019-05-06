@@ -37,7 +37,7 @@ Once installed, app can be run with `node src/index`. Run from root of project s
 
 > Note: Run two instances to simulate 2 peers on network.
 
-See Known Issues at bottom of this document for help.
+See [Known Issues](#known-issues) at bottom of this document for help.
 
 ```
 $node src/index
@@ -74,7 +74,7 @@ iam = announces your handle and switches to the wallet with that name (i.e. wall
 `d` = debug. shows the current payment transaction    
 `x` = execute. execute the scriptSig if there are pushdata opcodes  
 `s` = sign. sign the current payment tx  
-`b` = broadcast the current payment tx. if fails look at error meesage. There is help at end of this document.
+`b` = broadcast the current payment tx. if fails look at error meesage. There is [help at end of this document](#error-codes).
 
 Other commands that will be used in examples.  
 `pay <amount> <fee>` = sends payment tx to peer for that amount. You can consolidate utxo by paying peer. peer should `x` and `b` to broadcast.  
@@ -83,7 +83,7 @@ Other commands that will be used in examples.
 `stop` = stops the stream. peer that started the stream will need to execute, sign and broadcast.  
 
 # General setup for each example
-After running `node src/index` you initialize a direct p2p connection using the `iam` and `@` commands as shown below.
+After running `node src/index` you initialize a direct p2p connection using the `iam` and `@` commands as shown below. Enter the commands by row. For exmple, enter 'iam satoshi' in terminal 1 then 'iam hal' in terminal 2. Then proceed to the next line.
 
 |Peer1 (Satoshi)|Peer2 (Hal)|
 |----|----|
@@ -156,8 +156,7 @@ vin-empty
     is getting broadcast instead of the embedded serialized tx
 
 16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation). Code:-26 
-    Seems like this error happens when signing too many times    
-    Still debugging but seems like error went away when removed signing of tx when sendpeer
+    Tx has been malleated too many times (some unknown bug). Sign the tx again fix the signature.
 
 Dust amount detected in one output  
     Means one of the outputs is 0 

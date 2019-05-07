@@ -84,9 +84,13 @@ Other commands that will be used in examples.
 # General setup for each example
 After running `node src/index` you initialize a direct p2p connection using the `iam` and `@` commands as shown below. Enter the commands by row. For exmple, enter `iam satoshi` in terminal 1 then `iam hal` in terminal 2. Then proceed to the next line. In other words, Satoshi needs to know that Hal is a peer before he can create a direct connection with the `@` command.
 
+> Note: Run two instances to simulate 2 peers on network!  
+
+> If you have any problems running the app contact me dfoderick@gmail.com or Telegram https://t.me/FullCycleMining
+
 |Peer1 (Satoshi)|Peer2 (Hal)|
 |----|----|
-|`iam satoshi` (prompt will change to $satoshi)|`iam hal` (prompt will change to $hal|
+|`iam satoshi` (prompt will change to $satoshi)|`iam hal` (prompt will change to $hal)|
 |`@ hal` (prompt will change to satoshi<->hal)||
 |`w` (shows wallet balance) ||
 

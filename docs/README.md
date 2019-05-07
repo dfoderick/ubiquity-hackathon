@@ -45,10 +45,10 @@ In general, these p2p channels will become so pervasive they will be nearly invi
 # Background material
 The following links provide some background into the concepts used in this hack.
 
-Why OP_DROP
+Using OP_DROP.  
 https://medium.com/@craig_10243/the-start-of-metanet-ef0560e81505
 
-Ryan on Payment channels and malleability
+Ryan on Payment channels and malleability.  
 https://www.youtube.com/watch?v=S6rd1KbF7sc
 
 Mining specialization.   

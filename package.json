@@ -23,11 +23,11 @@
   },
   "homepage": "https://github.com/dfoderick/ubiquity-hackathon#readme",
   "dependencies": {
-    "bitcoin-source-api": "^0.2.2",
+    "bitcoin-source-api": "the-bitcoin-token/bitcoin-source-api",
     "bitcoinsource": "^0.1.16",
     "bsv": "github:dfoderick/bsv#p2p",
     "dat-swarm-defaults": "^1.0.2",
-    "discovery-swarm": "^5.1.4",
+    "discovery-swarm": "^6.1.0",
     "get-port": "^5.0.0",
     "portfinder": "^1.0.20",
     "vorpal": "^1.12.0"
